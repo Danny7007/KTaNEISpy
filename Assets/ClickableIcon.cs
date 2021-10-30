@@ -15,7 +15,9 @@ public class ClickableIcon : MonoBehaviour {
 
 	public SpriteRenderer sprite;
 	[SerializeField]
-	private MeshCollider collider;
+	private new MeshCollider collider;
+	[SerializeField]
+	private List<GameObject> instantiatedObjects = new List<GameObject>();
 
 	// Use this for initialization
 	IEnumerator Start () {
@@ -45,24 +47,29 @@ public class ClickableIcon : MonoBehaviour {
 
 		List<Collider> allHostColliders = hostMod.GetComponentsInChildren<MeshFilter>()
 			.Where(meshFilter => meshFilter != null && meshFilter.mesh != null)
-			.Select(x => MakeMesh(x.mesh))
+			.Select(x => MakeMesh(x.mesh, x.gameObject))
 			.Where(col => !col.Equals(this.collider))
 			.ToList();
 		Vector3 _1;
 		float _2;
+		Debug.Log("Placeself");
 		while (allHostColliders.Any(hostCol =>
 				Physics.ComputePenetration(hostCol, hostCol.transform.position, hostCol.transform.rotation,
 				collider, collider.transform.position, collider.transform.rotation,
 				out _1, out _2)))
 			this.transform.localPosition += 0.001f * Vector3.up;
-
+		//foreach (GameObject obj in instantiatedObjects)
+		//	Destroy(obj);
     }
-	Func<Mesh, Collider> MakeMesh = (m) =>
-	{
-		MeshCollider mcol = new MeshCollider();
-		mcol.sharedMesh = m;
+
+	Collider MakeMesh(Mesh mesh, GameObject obj)
+    {
+		GameObject newObj = Instantiate(obj, obj.transform.position, obj.transform.rotation, obj.transform);
+		instantiatedObjects.Add(newObj);
+		MeshCollider mcol = newObj.AddComponent<MeshCollider>();
+		mcol.sharedMesh = mesh;
 		return mcol;
-	};
+    }
 	
 	// Update is called once per frame
 	void Update () {
